@@ -12,15 +12,15 @@ package org.elasticsearch.action.support.master.info;
 import org.elasticsearch.TransportVersions;
 import org.elasticsearch.action.IndicesRequest;
 import org.elasticsearch.action.support.IndicesOptions;
-import org.elasticsearch.action.support.master.MasterNodeReadRequest;
+import org.elasticsearch.action.support.local.LocalClusterStateRequest;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.io.stream.StreamInput;
-import org.elasticsearch.common.io.stream.StreamOutput;
 import org.elasticsearch.core.TimeValue;
+import org.elasticsearch.core.UpdateForV10;
 
 import java.io.IOException;
 
-public abstract class ClusterInfoRequest<Request extends ClusterInfoRequest<Request>> extends MasterNodeReadRequest<Request>
+public abstract class ClusterInfoRequest<Request extends ClusterInfoRequest<Request>> extends LocalClusterStateRequest
     implements
         IndicesRequest.Replaceable {
 
@@ -37,18 +37,11 @@ public abstract class ClusterInfoRequest<Request extends ClusterInfoRequest<Requ
         this.indicesOptions = indicesOptions;
     }
 
-    @Deprecated(forRemoval = true)
-    public ClusterInfoRequest() {
-        super(TRAPPY_IMPLICIT_DEFAULT_MASTER_NODE_TIMEOUT);
-    }
-
-    // So subclasses can override the default indices options, if needed
-    @Deprecated(forRemoval = true)
-    protected ClusterInfoRequest(IndicesOptions indicesOptions) {
-        super(TRAPPY_IMPLICIT_DEFAULT_MASTER_NODE_TIMEOUT);
-        this.indicesOptions = indicesOptions;
-    }
-
+    /**
+     * NB prior to 9.0 this was a TransportMasterNodeReadAction so for BwC we must remain able to read these requests until
+     * we no longer need to support calling this action remotely.
+     */
+    @UpdateForV10(owner = UpdateForV10.Owner.DATA_MANAGEMENT)
     public ClusterInfoRequest(StreamInput in) throws IOException {
         super(in);
         indices = in.readStringArray();
@@ -56,16 +49,6 @@ public abstract class ClusterInfoRequest<Request extends ClusterInfoRequest<Requ
             in.readStringArray();
         }
         indicesOptions = IndicesOptions.readIndicesOptions(in);
-    }
-
-    @Override
-    public void writeTo(StreamOutput out) throws IOException {
-        super.writeTo(out);
-        out.writeStringArray(indices);
-        if (out.getTransportVersion().before(TransportVersions.V_8_0_0)) {
-            out.writeStringArray(Strings.EMPTY_ARRAY);
-        }
-        indicesOptions.writeIndicesOptions(out);
     }
 
     @Override

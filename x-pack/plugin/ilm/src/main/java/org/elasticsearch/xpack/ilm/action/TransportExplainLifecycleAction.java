@@ -68,8 +68,7 @@ public class TransportExplainLifecycleAction extends TransportClusterInfoAction<
             threadPool,
             actionFilters,
             ExplainLifecycleRequest::new,
-            indexNameExpressionResolver,
-            ExplainLifecycleResponse::new
+            indexNameExpressionResolver
         );
         this.xContentRegistry = xContentRegistry;
         this.indexLifecycleService = indexLifecycleService;
